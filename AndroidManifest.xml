@@ -4630,9 +4630,8 @@
         </receiver>
 
         <!-- This is the longest AndroidManifest.xml ever. -->
-
-        <!-- Begin crDroid Settings -->
-        <activity android:name="Settings$crDroidSettingsLayoutActivity"
+        <!-- Begin BaikalOS Settings -->
+        <activity android:name="Settings$BaikalSettingsLayoutActivity"
                 android:label="@string/crdroid_settings_title"
                 android:icon="@drawable/ic_homepage_crdroid"
                 android:exported="true"
@@ -4643,7 +4642,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
             <meta-data android:name="com.android.settings.FRAGMENT_CLASS"
-                       android:value="com.crdroid.settings.crDroidSettingsLayout" />
+                       android:value="com.crdroid.settings.BaikalSettingsLayout" />
             <meta-data android:name="com.android.settings.title"
                        android:resource="@string/crdroid_settings_title" />
             <meta-data android:name="com.android.settings.summary"

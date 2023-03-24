@@ -37,6 +37,14 @@
         android:order="-9998" />
 
     <Preference
+        android:key="app_profile_link"
+        android:title="@string/app_profile_link_title"
+        android:summary="@string/app_profile_link_summary"
+        settings:controller="com.android.settings.applications.appinfo.AppProfilePreferenceController"
+        settings:allowDividerBelow="true"
+        settings:allowDividerAbove="true" />
+
+    <Preference
         android:key="app_settings_link"
         android:title="@string/app_settings_link"
         settings:controller="com.android.settings.applications.appinfo.AppSettingPreferenceController" />

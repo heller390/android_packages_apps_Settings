@@ -31,6 +31,7 @@ import androidx.preference.PreferenceCategory;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceScreen;
 import androidx.preference.SwitchPreference;
+import androidx.preference.ListPreference;
 
 import com.android.settings.R;
 import com.android.settings.core.SettingsUIDeviceConfig;
@@ -157,6 +158,34 @@ public class BluetoothDetailsProfilesController extends BluetoothDetailsControll
 
         if (profile instanceof A2dpProfile) {
             A2dpProfile a2dp = (A2dpProfile) profile;
+
+            ListPreference bitRateSbcPref = (ListPreference) mProfilesContainer.findPreference(
+                    "SBC_BR_" + HIGH_QUALITY_AUDIO_PREF_TAG);
+
+            int bitrate = a2dp.getHighQualitySbcBitrate(device);
+            boolean hdEnabled = a2dp.isHighQualityAudioEnabled(device);
+
+            if( bitrate != 0 && hdEnabled ) {
+                Log.e(TAG, "Both SBC HD and HD Audio enabled!!!! Something terribly wrong. Disable Both ;-) " + device);
+                a2dp.setHighQualitySbcEnabled(device,0);
+                a2dp.setHighQualityAudioEnabled(mCachedDevice.getDevice(), false);
+                bitrate = 0;
+                hdEnabled = false;
+            }
+
+            if( bitRateSbcPref != null ) {
+                if (a2dp.isEnabled(device) ) {
+                    bitRateSbcPref.setVisible(true);
+                    bitRateSbcPref.setTitle("High Quality SBC");
+                    bitRateSbcPref.setValue(String.valueOf(bitrate));
+                    bitRateSbcPref.setSummary(bitRateSbcPref.getEntry());
+                    bitRateSbcPref.setEnabled((!a2dp.isHighQualityAudioEnabled(device) || bitrate != 0) && !mCachedDevice.isBusy() && !isLeAudioEnabled);
+                } else {
+                    //bitRateSbcPref.setEnabled(false);
+                    bitRateSbcPref.setVisible(false);
+                }
+            }
+
             SwitchPreference highQualityPref = (SwitchPreference) mProfilesContainer.findPreference(
                     HIGH_QUALITY_AUDIO_PREF_TAG);
             if (highQualityPref != null) {
@@ -164,11 +193,12 @@ public class BluetoothDetailsProfilesController extends BluetoothDetailsControll
                     highQualityPref.setVisible(true);
                     highQualityPref.setTitle(a2dp.getHighQualityAudioOptionLabel(device));
                     highQualityPref.setChecked(a2dp.isHighQualityAudioEnabled(device));
-                    highQualityPref.setEnabled(!mCachedDevice.isBusy());
+                    highQualityPref.setEnabled((bitrate == 0 || a2dp.isHighQualityAudioEnabled(device)) && !mCachedDevice.isBusy());
                 } else {
                     highQualityPref.setVisible(false);
                 }
             }
+
         }
     }
 
@@ -428,15 +458,86 @@ public class BluetoothDetailsProfilesController extends BluetoothDetailsControll
             SwitchPreference highQualityAudioPref = new SwitchPreference(
                     mProfilesContainer.getContext());
             highQualityAudioPref.setKey(HIGH_QUALITY_AUDIO_PREF_TAG);
-            highQualityAudioPref.setVisible(false);
+            highQualityAudioPref.setVisible(true);
+
             highQualityAudioPref.setOnPreferenceClickListener(clickedPref -> {
                 boolean enable = ((SwitchPreference) clickedPref).isChecked();
                 a2dp.setHighQualityAudioEnabled(mCachedDevice.getDevice(), enable);
+
+                ListPreference bitRateSbcPref = (ListPreference) mProfilesContainer.findPreference(
+                        "SBC_BR_" + HIGH_QUALITY_AUDIO_PREF_TAG);
+            
+                int bitrate = a2dp.getHighQualitySbcBitrate(device);
+                if( enable ) {
+                    if( bitrate > 0 ) a2dp.setHighQualitySbcEnabled(device,0);
+                    if( bitRateSbcPref.isEnabled() ) bitRateSbcPref.setEnabled(false);
+                } else {
+                    if( !bitRateSbcPref.isEnabled() ) bitRateSbcPref.setEnabled(true);
+                }
+
                 return true;
             });
             mProfilesContainer.addPreference(highQualityAudioPref);
         }
     }
+
+    /**
+     * This is a helper method to be called after adding a Preference for a profile. If that
+     * profile happened to be A2dp and the device supports high quality audio, it will add a
+     * separate preference for controlling whether to actually use high quality audio.
+     *
+     * @param profile the profile just added
+     */
+    private void maybeAddHighQualitySbcPref(LocalBluetoothProfile profile) {
+        if (!(profile instanceof A2dpProfile)) {
+            return;
+        }
+        BluetoothDevice device = mCachedDevice.getDevice();
+        A2dpProfile a2dp = (A2dpProfile) profile;
+        if (a2dp.isEnabled(device)) {
+
+            String [] values = new String[] {
+                "Disabled", "330 Kb/s","400 Kb/s","450 Kb/s","550 Kb/s","650 Kb/s"
+            };
+
+            String [] entryValues = new String[] {
+                "0", "330","400","450","550","650"
+            };
+            
+            ListPreference bitRatePref = new ListPreference(mProfilesContainer.getContext());
+            bitRatePref.setKey("SBC_BR_" + HIGH_QUALITY_AUDIO_PREF_TAG);
+            bitRatePref.setTitle("High Quality SBC");
+            bitRatePref.setVisible(true);
+            bitRatePref.setEntryValues(entryValues);
+            bitRatePref.setEntries(values);
+    
+            bitRatePref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+                public boolean onPreferenceChange(Preference preference, Object newValue) {
+                    Integer bitrate = Integer.parseInt(newValue.toString());
+                    if( bitrate.intValue() != a2dp.getHighQualitySbcBitrate(device) ) {
+                        bitRatePref.setValue(String.valueOf(bitrate));
+                        bitRatePref.setSummary(bitRatePref.getEntry());
+                        a2dp.setHighQualitySbcEnabled(mCachedDevice.getDevice(), bitrate.intValue());
+                        
+                        SwitchPreference hqaPref = (SwitchPreference) mProfilesContainer.findPreference(HIGH_QUALITY_AUDIO_PREF_TAG);
+                        if( hqaPref != null ) {
+                            if( bitrate.intValue() == 0 ) {
+                                hqaPref.setEnabled(true);
+                            } else {
+                                hqaPref.setEnabled(false);
+                                bitRatePref.setEnabled(true);
+                            }
+                        }
+                    }
+                    return true;
+                }
+            });
+
+            mProfilesContainer.addPreference(bitRatePref);
+
+        }
+    }
+
 
     @Override
     public void onPause() {
@@ -493,6 +594,7 @@ public class BluetoothDetailsProfilesController extends BluetoothDetailsControll
             if (pref == null) {
                 pref = createProfilePreference(mProfilesContainer.getContext(), profile);
                 mProfilesContainer.addPreference(pref);
+                maybeAddHighQualitySbcPref(profile);
                 maybeAddHighQualityAudioPref(profile);
             }
             refreshProfilePreference(pref, profile);

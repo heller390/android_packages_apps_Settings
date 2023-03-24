@@ -191,6 +191,8 @@ public class AppInfoDashboardFragment extends DashboardFragment
         use(AppHibernationPreferenceCategoryController.class).setChildren(
                 Arrays.asList(appHibernationSettings));
 
+        use(AppProfilePreferenceController.class).setParentFragment(this);
+
         final WriteSystemSettingsPreferenceController writeSystemSettings =
                 use(WriteSystemSettingsPreferenceController.class);
         writeSystemSettings.setParentFragment(this);

@@ -79,8 +79,10 @@ public class EnabledNetworkModePreferenceController extends
 
     @Override
     public int getAvailabilityStatus(int subId) {
-        boolean visible;
 
+        /*
+        boolean visible;
+        
         final PersistableBundle carrierConfig = mCarrierConfigCache.getConfigForSubId(subId);
         if (subId == SubscriptionManager.INVALID_SUBSCRIPTION_ID) {
             visible = false;
@@ -101,6 +103,9 @@ public class EnabledNetworkModePreferenceController extends
         }
 
         return visible ? AVAILABLE : CONDITIONALLY_UNAVAILABLE;
+        */
+        return CONDITIONALLY_UNAVAILABLE;
+
     }
 
     protected boolean isCallStateIdle() {

@@ -59,14 +59,14 @@ android_library {
     srcs: [
            "src/**/*.java",
            "src/**/*.kt",
-           "crDroidSettings/src/**/*.java",
-           "crDroidSettings/src/**/*.kt",
+           "BaikalSettings/src/**/*.java",
+           "BaikalSettings/src/**/*.kt",
     ],
 
     aaptflags: ["--extra-packages com.crdroid.settings"],
 
     resource_dirs: ["res",
-                    "crDroidSettings/res"
+                    "BaikalSettings/res"
     ],
 
     static_libs: [

@@ -46,6 +46,7 @@ public class PreferredNetworkModePreferenceController extends TelephonyBasePrefe
 
     @Override
     public int getAvailabilityStatus(int subId) {
+        /*
         final PersistableBundle carrierConfig = mCarrierConfigCache.getConfigForSubId(subId);
         boolean visible;
         if (subId == SubscriptionManager.INVALID_SUBSCRIPTION_ID) {
@@ -64,6 +65,8 @@ public class PreferredNetworkModePreferenceController extends TelephonyBasePrefe
         }
 
         return visible ? AVAILABLE : CONDITIONALLY_UNAVAILABLE;
+        */
+        return AVAILABLE;
     }
 
     @Override

@@ -16,7 +16,7 @@
 
 package com.android.settings.display;
 
-import static android.provider.Settings.System.MIN_REFRESH_RATE;
+import static android.provider.Settings.System.BAIKALOS_DEFAULT_MINFPS;
 
 import android.content.Context;
 import android.provider.Settings;
@@ -44,7 +44,7 @@ public class MinRefreshRatePreferenceController extends BasePreferenceController
     private List<String> mValues = new ArrayList<>();
 
     public MinRefreshRatePreferenceController(Context context) {
-        super(context, KEY_MIN_REFRESH_RATE);
+        super(context, BAIKALOS_DEFAULT_MINFPS);
 
         if (mContext.getResources().getBoolean(R.bool.config_show_min_refresh_rate_switch)) {
             Display.Mode mode = mContext.getDisplay().getMode();
@@ -82,7 +82,7 @@ public class MinRefreshRatePreferenceController extends BasePreferenceController
     @Override
     public void updateState(Preference preference) {
         final float currentValue = Settings.System.getFloat(mContext.getContentResolver(),
-                MIN_REFRESH_RATE, 60.00f);
+                BAIKALOS_DEFAULT_MINFPS, 60.00f);
         int index = mListPreference.findIndexOfValue(
                 String.format(Locale.US, "%.02f", currentValue));
         if (index < 0) index = 0;
@@ -92,7 +92,7 @@ public class MinRefreshRatePreferenceController extends BasePreferenceController
 
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
-        Settings.System.putFloat(mContext.getContentResolver(), MIN_REFRESH_RATE,
+        Settings.System.putFloat(mContext.getContentResolver(), BAIKALOS_DEFAULT_MINFPS,
                 Float.valueOf((String) newValue));
         updateState(preference);
         return true;
