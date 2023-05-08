@@ -497,11 +497,11 @@ public class BluetoothDetailsProfilesController extends BluetoothDetailsControll
         if (a2dp.isEnabled(device)) {
 
             String [] values = new String[] {
-                "Disabled", "330 Kb/s","400 Kb/s","450 Kb/s","550 Kb/s","650 Kb/s"
+                "Disabled", "512 Kb/s","720 Kb/s","800 Kb/s", "990 Kb/s","1100 Kb/s","1230 Kb/s", "1440 Kb/s"
             };
 
             String [] entryValues = new String[] {
-                "0", "330","400","450","550","650"
+                "0", "256","360","400","450","550","615","720"
             };
             
             ListPreference bitRatePref = new ListPreference(mProfilesContainer.getContext());
