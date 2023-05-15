@@ -17,4 +17,7 @@
     <string name="supl_disabled">Disabled</string>
     <string name="supl_disabled_summary">Will make acquiring location lock significantly slower, especially if PSDS is disabled too</string>
 
+    <string name="contact_scopes">Contact Scopes</string>
+
+
 </resources>
