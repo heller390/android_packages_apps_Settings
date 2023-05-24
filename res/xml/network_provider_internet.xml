@@ -124,14 +124,6 @@
         android:positiveButtonText="@string/save"
         android:negativeButtonText="@android:string/cancel" />
 
-    <Preference
-        android:fragment="com.android.settings.network.AdaptiveConnectivitySettings"
-        android:key="adaptive_connectivity"
-        android:title="@string/adaptive_connectivity_title"
-        android:summary="@string/summary_placeholder"
-        android:order="25"
-        settings:controller="com.android.settings.network.AdaptiveConnectivityPreferenceController"/>
-
     <SwitchPreference
         android:icon="@drawable/ic_network_check"
         android:key="captive_portal"
@@ -140,4 +132,18 @@
         android:order="30"
         settings:highlightableMenuKey="@string/menu_key_network"
         settings:controller="com.android.settings.network.CaptivePortalPreferenceController" />
+
+    <Preference
+        android:fragment="com.android.settings.network.AdaptiveConnectivitySettings"
+        android:key="adaptive_connectivity"
+        android:title="@string/adaptive_connectivity_title"
+        android:summary="@string/summary_placeholder"
+        android:order="25"
+        settings:controller="com.android.settings.network.AdaptiveConnectivityPreferenceController"/>
+    <Preference
+        android:key="connectivity_checks"
+        android:title="@string/conn_checks_title"
+        android:order="30"
+        settings:controller="com.android.settings.network.ConnectivityChecksPrefController"/>
+
 </PreferenceScreen>
