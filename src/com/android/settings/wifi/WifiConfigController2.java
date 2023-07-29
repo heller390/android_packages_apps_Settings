@@ -524,16 +524,22 @@ public class WifiConfigController2 implements TextWatcher,
                 && mEapCaCertSpinner != null
                 && mView.findViewById(R.id.l_ca_cert).getVisibility() != View.GONE) {
             String caCertSelection = (String) mEapCaCertSpinner.getSelectedItem();
-            if (caCertSelection.equals(mUnspecifiedCertString)) {
+            if (caCertSelection.equals(mUnspecifiedCertString) || caCertSelection.equals(mDoNotProvideEapUserCertString)) {
                 // Disallow submit if the user has not selected a CA certificate for an EAP network
                 // configuration.
-                enabled = false;
+                enabled = true;
             } else if (mEapDomainView != null
                     && mView.findViewById(R.id.l_domain).getVisibility() != View.GONE
                     && TextUtils.isEmpty(mEapDomainView.getText().toString())) {
                 // Disallow submit if the user chooses to use a certificate for EAP server
                 // validation, but does not provide a domain.
-                enabled = false;
+                if( mEapUserCertSpinner != null 
+                && (mEapUserCertSpinner.getSelectedItem().equals(mUnspecifiedCertString) || 
+                    mEapUserCertSpinner.getSelectedItem().equals(mDoNotProvideEapUserCertString) ) ) {
+                    enabled = true;
+                } else {
+                    enabled = false;
+                }
             }
         }
         if ((mWifiEntrySecurity == WifiEntry.SECURITY_EAP
@@ -541,10 +547,11 @@ public class WifiConfigController2 implements TextWatcher,
                 || mWifiEntrySecurity == WifiEntry.SECURITY_EAP_SUITE_B)
                 && mEapUserCertSpinner != null
                 && mView.findViewById(R.id.l_user_cert).getVisibility() != View.GONE
-                && mEapUserCertSpinner.getSelectedItem().equals(mUnspecifiedCertString)) {
+                && (mEapUserCertSpinner.getSelectedItem().equals(mUnspecifiedCertString) || 
+                    mEapUserCertSpinner.getSelectedItem().equals(mDoNotProvideEapUserCertString) ) ){
             // Disallow submit if the user has not selected a user certificate for an EAP network
             // configuration.
-            enabled = false;
+            enabled = true;
         }
         return enabled;
     }
@@ -712,6 +719,8 @@ public class WifiConfigController2 implements TextWatcher,
                 config.enterpriseConfig.setDomainSuffixMatch(mEapDomainView.getText().toString());
                 if (caCert.equals(mUnspecifiedCertString)) {
                     // ca_cert already set to null, so do nothing.
+                } else if (caCert.equals(mDoNotProvideEapUserCertString)) {
+                    // ca_cert already set to null, so do nothing.
                 } else if (mIsTrustOnFirstUseSupported && caCert.equals(mTrustOnFirstUse)) {
                     config.enterpriseConfig.enableTrustOnFirstUse(true);
                 } else if (caCert.equals(mUseSystemCertsString)) {
@@ -746,6 +755,8 @@ public class WifiConfigController2 implements TextWatcher,
 
                 // Only set OCSP option if there is a valid CA certificate.
                 if (caCert.equals(mUnspecifiedCertString)) {
+                    config.enterpriseConfig.setOcsp(WifiEnterpriseConfig.OCSP_NONE);
+                } else if (caCert.equals(mDoNotProvideEapUserCertString)) {
                     config.enterpriseConfig.setOcsp(WifiEnterpriseConfig.OCSP_NONE);
                 } else {
                     config.enterpriseConfig.setOcsp(mEapOcspSpinner.getSelectedItemPosition());
@@ -966,6 +977,9 @@ public class WifiConfigController2 implements TextWatcher,
     }
 
     protected void showSecurityFields(boolean refreshEapMethods, boolean refreshCertificates) {
+
+        Log.e(TAG, "showSecurityFields: " + refreshEapMethods + ", " + refreshCertificates);
+
         if (mWifiEntrySecurity == WifiEntry.SECURITY_NONE
                 || mWifiEntrySecurity == WifiEntry.SECURITY_OWE) {
             mView.findViewById(R.id.security_fields).setVisibility(View.GONE);
@@ -990,6 +1004,7 @@ public class WifiConfigController2 implements TextWatcher,
                 && mWifiEntrySecurity != WifiEntry.SECURITY_EAP_WPA3_ENTERPRISE
                 && mWifiEntrySecurity != WifiEntry.SECURITY_EAP_SUITE_B) {
             mView.findViewById(R.id.eap).setVisibility(View.GONE);
+            Log.e(TAG, "showSecurityFields: not secured");
             return;
         }
         mView.findViewById(R.id.eap).setVisibility(View.VISIBLE);
@@ -1045,7 +1060,7 @@ public class WifiConfigController2 implements TextWatcher,
             loadCertificates(
                     mEapCaCertSpinner,
                     androidKeystoreAliasLoader.getCaCertAliases(),
-                    null /* noCertificateString */,
+                    mDoNotProvideEapUserCertString /* noCertificateString */,
                     false /* showMultipleCerts */,
                     true /* showUsePreinstalledCertOption */);
             loadCertificates(
@@ -1066,6 +1081,8 @@ public class WifiConfigController2 implements TextWatcher,
             final int phase2Method = enterpriseConfig.getPhase2Method();
             mEapMethodSpinner.setSelection(eapMethod);
             mLastShownEapMethod = eapMethod;
+
+            Log.e(TAG, "showSecurityFields: showEapFieldsByMethod 1");
             showEapFieldsByMethod(eapMethod);
             switch (eapMethod) {
                 case Eap.PEAP:
@@ -1157,6 +1174,7 @@ public class WifiConfigController2 implements TextWatcher,
             mEapIdentityView.setText(enterpriseConfig.getIdentity());
             mEapAnonymousView.setText(enterpriseConfig.getAnonymousIdentity());
         } else {
+            Log.e(TAG, "showSecurityFields: showEapFieldsByMethod 2");
             showEapFieldsByMethod(mEapMethodSpinner.getSelectedItemPosition());
         }
     }
@@ -1271,11 +1289,18 @@ public class WifiConfigController2 implements TextWatcher,
                 break;
         }
 
+            
         if (mView.findViewById(R.id.l_ca_cert).getVisibility() != View.GONE) {
             String eapCertSelection = (String) mEapCaCertSpinner.getSelectedItem();
-            if (eapCertSelection.equals(mUnspecifiedCertString)
-                    || (mIsTrustOnFirstUseSupported
-                            && eapCertSelection.equals(mTrustOnFirstUse))) {
+            String clientCert = (String) mEapUserCertSpinner.getSelectedItem();
+
+            Log.e(TAG, "check domain vis " + eapCertSelection + " -> " + clientCert + " -> " + mUnspecifiedCertString + " -> " + mDoNotProvideEapUserCertString);
+
+            if ( (eapCertSelection.equals(mUnspecifiedCertString)) || eapCertSelection.equals(mDoNotProvideEapUserCertString)
+                || (mIsTrustOnFirstUseSupported && eapCertSelection.equals(mTrustOnFirstUse)) ) {
+
+                Log.e(TAG, "showEapFieldsByMethod: eapCertSelection " + eapCertSelection);
+
                 // Domain suffix matching is not relevant if the user hasn't chosen a CA
                 // certificate yet, or chooses not to validate the EAP server.
                 setDomainInvisible();
@@ -1284,6 +1309,11 @@ public class WifiConfigController2 implements TextWatcher,
                 // CA certificate yet.
                 setOcspInvisible();
             }
+
+            /*if( clientCert.equals(mDoNotProvideEapUserCertString) ) {
+                Log.e(TAG, "showEapFieldsByMethod: clientCert " + clientCert);
+                setDomainInvisible();
+            }*/
         }
     }
 
@@ -1675,6 +1705,9 @@ public class WifiConfigController2 implements TextWatcher,
 
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+
+        Log.e(TAG, "onItemSelected: " + parent);
+
         if (parent == mSecuritySpinner) {
             // Convert menu position to actual Wi-Fi security type
             mWifiEntrySecurity = mSecurityInPosition[position];
@@ -1689,13 +1722,21 @@ public class WifiConfigController2 implements TextWatcher,
             final int selectedItemPosition = mEapMethodSpinner.getSelectedItemPosition();
             if (mLastShownEapMethod != selectedItemPosition) {
                 mLastShownEapMethod = selectedItemPosition;
-                showSecurityFields(/* refreshEapMethods */false, /* refreshCertificates */ true);
             }
+            Log.e(TAG, "onItemSelected: mEapMethodSpinner");
+            showSecurityFields(/* refreshEapMethods */false, /* refreshCertificates */ true);
         } else if (parent == mEapCaCertSpinner) {
             String selectedItem = parent.getItemAtPosition(position).toString();
             if (selectedItem.equals(mInstallCertsString)) {
                 startActivityForInstallCerts();
             }
+            Log.e(TAG, "onItemSelected: mEapCaCertSpinner");
+            showSecurityFields(/* refreshEapMethods */ false, /* refreshCertificates */ false);
+        } else if (parent == mEapUserCertSpinner) {
+            Log.e(TAG, "onItemSelected: mEapUserCertSpinner");
+            showSecurityFields(/* refreshEapMethods */ false, /* refreshCertificates */ false);
+        } else if (parent == mEapOcspSpinner) {
+            Log.e(TAG, "onItemSelected: mEapOcspSpinner");
             showSecurityFields(/* refreshEapMethods */ false, /* refreshCertificates */ false);
         } else if (parent == mPhase2Spinner
                 && mEapMethodSpinner.getSelectedItemPosition() == WIFI_EAP_METHOD_PEAP) {

@@ -543,13 +543,18 @@ public class WifiConfigController implements TextWatcher,
             if (caCertSelection.equals(mUnspecifiedCertString)) {
                 // Disallow submit if the user has not selected a CA certificate for an EAP network
                 // configuration.
-                enabled = false;
+                enabled = true;
             } else if (mEapDomainView != null
                     && mView.findViewById(R.id.l_domain).getVisibility() != View.GONE
                     && TextUtils.isEmpty(mEapDomainView.getText().toString())) {
                 // Disallow submit if the user chooses to use a certificate for EAP server
                 // validation, but does not provide a domain.
-                enabled = false;
+                if( mEapUserCertSpinner != null 
+                && mEapUserCertSpinner.getSelectedItem().equals(mUnspecifiedCertString) ) {
+                    enabled = true;
+                } else {
+                    enabled = false;
+                }
             }
         }
         if ((mAccessPointSecurity == AccessPoint.SECURITY_EAP
@@ -560,7 +565,7 @@ public class WifiConfigController implements TextWatcher,
                 && mEapUserCertSpinner.getSelectedItem().equals(mUnspecifiedCertString)) {
             // Disallow submit if the user has not selected a user certificate for an EAP network
             // configuration.
-            enabled = false;
+            enabled = true;
         }
         return enabled;
     }
@@ -1057,7 +1062,7 @@ public class WifiConfigController implements TextWatcher,
             loadCertificates(
                     mEapCaCertSpinner,
                     androidKeystoreAliasLoader.getCaCertAliases(),
-                    null /* noCertificateString */,
+                    mDoNotProvideEapUserCertString /* noCertificateString */,
                     false /* showMultipleCerts */,
                     true /* showUsePreinstalledCertOption */);
             loadCertificates(
@@ -1285,7 +1290,13 @@ public class WifiConfigController implements TextWatcher,
 
         if (mView.findViewById(R.id.l_ca_cert).getVisibility() != View.GONE) {
             String eapCertSelection = (String) mEapCaCertSpinner.getSelectedItem();
-            if (eapCertSelection.equals(mUnspecifiedCertString)) {
+            String clientCert = (String) mEapUserCertSpinner.getSelectedItem();
+
+            Log.e(TAG, "check domain vis " + eapCertSelection + " -> " + clientCert + " -> " + mUnspecifiedCertString + " -> " + mDoNotProvideEapUserCertString);
+
+            if ( (eapCertSelection.equals(mUnspecifiedCertString))
+                || (clientCert.equals(mUnspecifiedCertString))
+                || (clientCert.equals(mDoNotProvideEapUserCertString)) ) {
                 // Domain suffix matching is not relevant if the user hasn't chosen a CA
                 // certificate yet, or chooses not to validate the EAP server.
                 setDomainInvisible();
