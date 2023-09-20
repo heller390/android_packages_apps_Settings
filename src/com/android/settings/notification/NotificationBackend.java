@@ -117,6 +117,9 @@ public class NotificationBackend {
         try {
             row.systemApp = row.lockedImportance =
                     sINM.isImportanceLocked(app.packageName, app.applicationInfo.uid);
+            if( row.systemApp ) {
+                Log.i(TAG, "Important Notification: " + app.packageName + "/" + app.applicationInfo.uid);
+            }
         } catch (RemoteException e) {
             Log.w(TAG, "Error calling NMS", e);
         }
@@ -126,8 +129,8 @@ public class NotificationBackend {
         if (app.applicationInfo.targetSdkVersion > Build.VERSION_CODES.S_V2) {
             if (app.requestedPermissions == null || Arrays.stream(app.requestedPermissions)
                     .noneMatch(p -> p.equals(android.Manifest.permission.POST_NOTIFICATIONS))) {
-                row.lockedImportance = true;
-                row.permissionStateLocked = true;
+                //row.lockedImportance = true;
+                //row.permissionStateLocked = true;
             }
         }
     }
@@ -172,7 +175,7 @@ public class NotificationBackend {
                     app.packageName, PackageManager.GET_PERMISSIONS);
             final AppRow row = new AppRow();
             recordCanBeBlocked(info, row);
-            boolean systemBlockable = !row.systemApp || (row.systemApp && row.banned);
+            boolean systemBlockable = true; //!row.systemApp || (row.systemApp && row.banned);
             return systemBlockable && !row.lockedImportance;
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
