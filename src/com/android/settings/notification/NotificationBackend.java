@@ -175,7 +175,7 @@ public class NotificationBackend {
                     app.packageName, PackageManager.GET_PERMISSIONS);
             final AppRow row = new AppRow();
             recordCanBeBlocked(info, row);
-            boolean systemBlockable = true; //!row.systemApp || (row.systemApp && row.banned);
+            boolean systemBlockable = !row.systemApp || (row.systemApp && row.banned);
             return systemBlockable && !row.lockedImportance;
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();

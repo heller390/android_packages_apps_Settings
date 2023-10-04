@@ -158,8 +158,8 @@ public abstract class NotificationPreferenceController extends AbstractPreferenc
                 return channel.isBlockable() || channel.getImportance() == IMPORTANCE_NONE;
             }
 
-            return channel.isBlockable() || /*!mAppRow.systemApp
-                    ||*/ channel.getImportance() == IMPORTANCE_NONE;
+            return channel.isBlockable() || !mAppRow.systemApp
+                    || channel.getImportance() == IMPORTANCE_NONE;
         }
         return false;
     }
@@ -172,7 +172,7 @@ public abstract class NotificationPreferenceController extends AbstractPreferenc
             return overrideCanConfigureValue;
         }
         if (mAppRow != null) {
-            boolean systemBlockable = true; // !mAppRow.systemApp || (mAppRow.systemApp && mAppRow.banned);
+            boolean systemBlockable = !mAppRow.systemApp || (mAppRow.systemApp && mAppRow.banned);
             return systemBlockable && !mAppRow.lockedImportance;
         }
         return true;
@@ -201,7 +201,7 @@ public abstract class NotificationPreferenceController extends AbstractPreferenc
             return overrideCanConfigureValue;
         }
         if (group != null && mAppRow != null) {
-            if (/*!mAppRow.systemApp &&*/ !mAppRow.lockedImportance) {
+            if (!mAppRow.systemApp && !mAppRow.lockedImportance) {
                 return true;
             }
 
